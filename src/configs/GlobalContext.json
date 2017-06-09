@@ -1,0 +1,12 @@
+{
+  "SYSTEM":    [
+                {"SPARK_YARN_MODE":"true"}
+               ]
+ ,
+"SparkConfig": [
+                {"spark.serializer":"org.apache.spark.serializer.KryoSerializer"},
+                {"spark.driver.maxResultSize":"0"}
+               ]
+}
+
+
