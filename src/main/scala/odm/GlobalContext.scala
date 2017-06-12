@@ -41,28 +41,6 @@ Logger.getLogger("akka").setLevel(Level.OFF)
 
 
 
-//  // All equal rows from both left_df and right_df
-//  val intersect_df = left_df.intersect(right_df)
-//
-//  // All rows from left_df which is don't exist in right_df
-//
-//  val left_minus_df     = left_df.except(left_df.intersect(right_df))
-//
-//  //All rows from right_df which is don't exist in left_df
-//  val right_minus_df     = right_df.except(right_df.intersect(left_df))
-//
-//  // all rows which is different from both right_df and left_df
-//  val all_non_matching_rows_df  = right_df.unionAll(left_df).except(right_df.intersect(left_df))
 
-
-
-
-
- // val hiveContext = new org.apache.spark.sql.hive.HiveContext(SC)
-
-  //    val df1 =sqlContext.sql("select concat_ws('|',partn_nbr,cnsm_id,src_cd,lgcy_src_id) as hash_keyf, * " +
-  //      "from parquet.`maprfs:////datalake/uhclake/prd/developer/sbandar8/CDB-ARA/L_cnsm_srch_full_pqt`" )
-  //    val df2 = sqlContext.sql("select concat_ws('|',partn_nbr,cnsm_id,src_cd,lgcy_src_id) as hash_keyi," +
-  //      "* from parquet.`maprfs:////datalake/uhclake/prd/developer/sbandar8/CDB-ARA/L_cnsm_srch_full_INC_pqt`")
 
 }

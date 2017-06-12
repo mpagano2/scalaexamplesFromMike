@@ -1,5 +1,6 @@
 package odm
 
+import org.apache.spark.SparkContext
 import org.apache.spark.sql.types.{StructField, StructType}
 
 //import org.apache.log4j.{Level, Logger}
@@ -9,27 +10,37 @@ import org.apache.spark.sql.types.{StructField, StructType}
 
 object TestObj1 {
 
- class localContext extends GlobalContext("ff")
+ class localContext(appName: String) extends GlobalContext
   {
 
+  SConfig.set("spark.driver.maxResultSize","0")
+          .setAppName(appName)
 
+  val sc= new SparkContext(SConfig)
+   val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+   sqlContext.sql("SET spark.sql.autoBroadcastJoinThreshold = -1")
+
+   val left_df =sqlContext.sql("select * from parquet.`maprfs:////datalake/uhclake/prd/developer/idemidov/testdata/L_cnsm_srch_full_pqt_f`" )
+   val right_df = sqlContext.sql("select * from parquet.`maprfs:////datalake/uhclake/prd/developer/idemidov/testdata/L_cnsm_srch_inc_prq`")
+   val left_prefix = "df1"
+   val right_prefix = "df2"
 
  }
 
+
+
   def main(args: Array[String]) {
 
-    val gv = new GlobalContext("TestObj1")
-    println("Spark context created:" + gv.SC)
-    val sqlContext = gv.sqlContext
+    val localconfig = new localContext("TestObj1")
+    val tools =new Tools
+       println("Spark context created:" + localconfig.sc)
 
-    println ("Spark version : " + gv.SC.version)
-    import sqlContext.implicits._
+    println ("Spark version : " + localconfig.sc.version)
+    import localconfig.sqlContext.implicits._
 
-    val df1 =gv.left_df
-    val df2 = gv.right_df
+    val df1 =localconfig.left_df
+    val df2 = localconfig.right_df
 
-    val df1_schema = df1.schema
-    val df2_schema = df2.schema
 
     val df1_num_columns = df1.schema.fieldNames.length
     val df2_num_columns = df2.schema.fieldNames.length
@@ -43,15 +54,14 @@ object TestObj1 {
     val df1_renamed_fields = df1.schema.fields.map(s => StructField("df1_"+ s.name,s.dataType,s.nullable))
     val df1_new_schema = StructType(df1_renamed_fields)
     val df2_new_schema = StructType(df2_renamed_fields)
-    val join_schema = StructType(df1_renamed_fields.union(df2_renamed_fields))
 
-    val join_df1 = sqlContext.createDataFrame(df1.rdd,df1_new_schema)
-    val join_df2 = sqlContext.createDataFrame(df2.rdd,df2_new_schema)
+    val join_df1 = localconfig.sqlContext.createDataFrame(df1.rdd,df1_new_schema)
+    val join_df2 = localconfig.sqlContext.createDataFrame(df2.rdd,df2_new_schema)
     join_df1.printSchema()
     join_df2.printSchema()
 
-    val df_1_partitioned = join_df1.repartition(gv.NumPartitions,$"df1_hash_key")
-    val df_2_partitioned = join_df2.repartition(gv.NumPartitions,$"df2_hash_key").cache()
+    val df_1_partitioned = join_df1.repartition(localconfig.NumPartitions,$"df1_hash_key")
+    val df_2_partitioned = join_df2.repartition(localconfig.NumPartitions,$"df2_hash_key").cache()
 
 
     println("df1_num_columns : " + df1_num_columns.toString )
@@ -63,20 +73,20 @@ object TestObj1 {
     val full_inc_fuj_df = df_1_partitioned.join(df_2_partitioned,df_1_partitioned("df1_hash_key") === df_2_partitioned("df2_hash_key"),"full_outer")
       .rdd
 
-    //     .map(s =>
-    //         Raw_compaction(s,df1_num_columns,
-    //         df2_cdc_ts_position,df1_cdc_ts_position,df1_num_columns+df2_cdc_ts_position))
+//         .map(s =>
+//             tools.Raw_compaction(s,df1_num_columns,
+//             df2_cdc_ts_position,df1_cdc_ts_position,df1_num_columns+df2_cdc_ts_position))
 
 
-    full_inc_fuj_df.saveAsTextFile(gv.result_path + gv.result_folder )
-    gv.right_df.rdd.saveAsTextFile(gv.result_path + "intersect"+gv.result_path )
+    full_inc_fuj_df.saveAsTextFile(localconfig.result_path + localconfig.result_folder )
+    localconfig.right_df.rdd.saveAsTextFile(localconfig.result_path + "intersect"+localconfig.result_path )
 
   }
 }
 
 
 
-//object App {
+
 
 
 
